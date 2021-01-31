@@ -1,0 +1,46 @@
+configname: config_name
+data:
+    batch_size: 256
+    shuffle: False
+    train: path_to_training_dataset
+    dev: path_to_test_dataset1
+    test: path_to_test_dataset2
+model:
+    enc:
+        type: lstm
+        hidden_size: 256
+        output_size: 512
+        n_layers: 4
+        bidirectional: True
+    dec:
+        type: lstm
+        hidden_size: 256
+        output_size: 128
+        n_layers: 1
+    joint:
+        input_size: 1024
+        inner_size: 1024
+    vocab_size: 11
+    max_rle: 10
+    share_weight: False
+    feature_dim: 7
+    dropout: 0.3
+training:
+    load_model: False
+    load_encoder: False
+    load_decoder: False
+    eval_or_not: True
+    seed: 2019
+    num_gpu: 1
+    epochs: 60
+    max_grad_norm: 200
+    visualization: True
+    show_interval: 5000
+    save_model: saved_model_name
+optim:
+    type: adam
+    lr: 0.0001
+    momentum: 0.9
+    decay_ratio: 0.7
+    weight_decay: 0
+    begin_to_adjust_lr: 3
