@@ -18,12 +18,28 @@ dependencies:
 pip install pyyaml editdistance python-Levenshtein biopython tensorboardX
 ```
 
-pytorch-gpu:
+if the machine has GPUs, you can install pytorch-gpu >=1.4.0 environment:
 ```
+conda install pytorch=1.4.0
 ```
 
-pytorch-cpu:
+if the machine only has Cpus, install pytorch-cpu >=1.4.0 environment:
 ```
+conda install pytorch-cpu=1.4.0
+```
+Install BlockPolish from the GitHub repository:
+```
+git clone https://github.com/huangnengCSU/BlockPolish.git
+cd BlockPolish
+python brnnctc_generate.py -h
+usage: brnnctc_generate.py [-h] [-config CONFIG] -model MODEL -data DATA -output OUTPUT
+
+optional arguments:
+  -h, --help      show this help message and exit
+  -config CONFIG
+  -model MODEL
+  -data DATA
+  -output OUTPUT
 ```
 
 ## Usage ##
@@ -48,10 +64,13 @@ block -b reads2racon.sorted.bam -s trivial_features.txt -c complex_features.txt
 ### Step 4: Polishing trivial blocks and complex blocks
 The config files and model files are released on Google Drive https://drive.google.com/drive/folders/1JVIANm7ZdGI27ZMJ_TXn_TwKPmXmQPPh.
 ```
+# polishing trivial blocks with trivial config file `test_trivial_config.yaml` and trivial model file `trivial_model.chkpt`
 python brnnctc_generate.py -config config/test_trivial_config.yaml -model trivial_model.chkpt -data trivial_features.txt -output trivial_polished.txt
 
+# polishing complex blocks with complex config file `test_complex_config.yaml` and complex model file `complex_model.chkpt`
 python brnnctc_generate.py -config config/test_complex_config.yaml -model complex_model.chkpt -data complex_features.txt -output complex_polished.txt
 
+# merge polishing results of trivial blocks and complex blocks
 python needle.py --t trivial_polished.txt --c complex_polished.txt -output polished_assembly.fa
 ```
 
