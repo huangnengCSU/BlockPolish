@@ -57,7 +57,7 @@ samtools sort -@ 40 reads2racon.bam -o reads2racon.sorted.bam
 samtools index -@ 40 reads2racon.sorted.bam
 ```
 ### Step 3: Dividing draft assembly and generating feature matrices
-In this step, the draft assembly is divided into trivial blocks and complex blocks with different qualities according to reads-to-assembly alignment. Then the feature matrix of each block is extracted including percentages of different bases, insertions, and deletions at each position.
+In this step, the draft assembly is divided into trivial blocks and complex blocks with different qualities according to reads-to-assembly alignment. Then the feature matrix of each block is extracted including percentages of different bases, insertions, and deletions at each position. This process is done by [BPFGM](https://github.com/huangnengCSU/BPFGM.git).
 ```
 block -b reads2racon.sorted.bam -s trivial_features.txt -c complex_features.txt
 ```
