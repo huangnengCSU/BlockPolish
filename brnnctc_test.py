@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import yaml
 from tqdm import tqdm
