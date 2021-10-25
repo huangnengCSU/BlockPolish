@@ -1,0 +1,54 @@
+BootStrap: docker
+From: ubuntu:18.04
+
+%files
+    /homeb/code
+
+%post
+    # make print colour #
+    GREEN='\033[0;32m'
+    NOCOLOUR='\033[0m'
+    PACKAGES=/packages
+
+    echo "export PACKAGES=/packages:\$PATH" >> $SINGULARITY_ENVIRONMENT
+
+    # give all files 774 and directories 775 by default
+    umask 002
+
+    apt-get -y update
+
+    apt-get install -y wget
+
+    mkdir $PACKAGES
+    cd $PACKAGES
+    wget -p $PACKAGES https://github.com/Kitware/CMake/releases/download/v3.21.3/cmake-3.21.3-linux-x86_64.tar.gz
+    # cp /homeb/code/cmake-3.21.3-linux-x86_64.tar.gz .
+    tar -zxvf $PACKAGES/cmake-3.21.3-linux-x86_64.tar.gz
+    export PATH=$PACKAGES/cmake-3.21.3-linux-x86_64/bin/:$PATH
+    echo "export PATH=$PACKAGES/cmake-3.21.3-linux-x86_64/bin/:\$PATH" >> $SINGULARITY_ENVIRONMENT
+
+    apt-get install -y git
+
+    git clone https://github.com/huangnengCSU/BlockPolish.git
+    git clone https://github.com/huangnengCSU/BPFGM.git
+    # cp -r /homeb/code/BlockPolish .
+    # cp -r /homeb/code/BPFGM .
+
+    apt-get install -y vim gcc g++ make zlib1g-dev
+
+    cd $PACKAGES/BPFGM
+    mkdir build && cd build && cmake .. && make
+    export PATH=$PACKAGES/BPFGM/build/:$PATH
+    echo "export PATH=$PACKAGES/BPFGM/build/:\$PATH" >> $SINGULARITY_ENVIRONMENT
+    
+    # install anaconda
+    wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh && \
+    bash Miniconda3-py38_4.10.3-Linux-x86_64.sh -b -p /opt/conda
+    export PATH=/opt/conda/bin/:$PATH
+    echo "export PATH=/opt/conda/bin/:\$PATH" >> $SINGULARITY_ENVIRONMENT
+
+    pip install pyyaml editdistance python-Levenshtein biopython tensorboardX
+    conda install pytorch=1.4.0
+
+    cd $PACKAGES/BlockPolish
+    python brnnctc_generate.py -h
