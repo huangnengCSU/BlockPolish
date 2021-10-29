@@ -9,7 +9,7 @@ from rnnt.utils import AttrDict, init_logger, count_parameters, save_model, comp
 from rnnt.ctcdecoder import GreedyDecoder
 
 
-def generate(config, model, validating_data, outfile):
+def generate(config, model, validating_data, outfile, device):
     rle_decoder = GreedyDecoder(int2base, blank_index=0)
     base_decoder = GreedyDecoder(int2base, blank_index=0)
 
@@ -18,8 +18,10 @@ def generate(config, model, validating_data, outfile):
     for (regions, inputs, inputs_length) in tqdm(validating_data):
         inputs = inputs[0]
         inputs_length = inputs_length[0]
-        if config.training.num_gpu > 0:
-            inputs, inputs_length = inputs.cuda(), inputs_length.cuda()
+        # if config.training.num_gpu > 0:
+        #     inputs, inputs_length = inputs.cuda(), inputs_length.cuda()
+        inputs = inputs.to(device)
+        inputs_length = inputs_length.to(device)
 
         batch_size = inputs.shape[0]
         max_inputs_length = inputs_length.max().item()
@@ -50,7 +52,9 @@ def main():
     parser.add_argument('-model', type=str, required=True)
     parser.add_argument('-data', type=str, required=True)
     parser.add_argument('-output', type=str, required=True)
+    parser.add_argument('--no_cuda', action="store_true", help='If running on cpu device, set the argument.')
     opt = parser.parse_args()
+    device = torch.device('cuda' if not opt.no_cuda else 'cpu')
 
     configfile = open(opt.config)
     config = AttrDict(yaml.load(configfile, Loader=yaml.FullLoader))
@@ -62,16 +66,16 @@ def main():
     dev_dataset = PolishGenerateDataset(opt.data, 1024, 40)
     validate_data = torch.utils.data.DataLoader(dev_dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
 
-    model = BRNNCTC(config.model)
+    model = BRNNCTC(config.model).to(device)
     checkpoint = torch.load(opt.model)
     model.load_state_dict(checkpoint['forward'])
 
-    if config.training.num_gpu > 0:
-        model = model.cuda()
-        if config.training.num_gpu > 1:
-            device_ids = list(range(config.training.num_gpu))
-            model = torch.nn.DataParallel(model, device_ids=device_ids)
-    generate(config, model, validate_data, fout)
+    # if config.training.num_gpu > 0:
+    #     model = model.cuda()
+    #     if config.training.num_gpu > 1:
+    #         device_ids = list(range(config.training.num_gpu))
+    #         model = torch.nn.DataParallel(model, device_ids=device_ids)
+    generate(config, model, validate_data, fout, device)
     fout.close()
 
 
