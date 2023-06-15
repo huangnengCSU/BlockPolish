@@ -27,9 +27,9 @@ def train(epoch, config, model, training_data, optimizer, logger, visualizer=Non
         training_data):
 
         if config.training.num_gpu > 0:
-            inputs, inputs_length = inputs.cuda(), inputs_length.cuda()
-            targets, targets_length = targets.cuda(), targets_length.cuda()
-            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length.cuda(), rles.cuda(), rles_length.cuda()
+            inputs, inputs_length = inputs.cuda(), inputs_length
+            targets, targets_length = targets.cuda(), targets_length
+            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length, rles.cuda(), rles_length
 
         max_inputs_length = inputs_length.max().item()
         max_targets_length = targets_length.max().item()
@@ -100,9 +100,9 @@ def eval(epoch, config, model, validating_data, logger, visualizer=None):
         validating_data):
 
         if config.training.num_gpu > 0:
-            inputs, inputs_length = inputs.cuda(), inputs_length.cuda()
-            targets, targets_length = targets.cuda(), targets_length.cuda()
-            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length.cuda(), rles.cuda(), rles_length.cuda()
+            inputs, inputs_length = inputs.cuda(), inputs_length
+            targets, targets_length = targets.cuda(), targets_length
+            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length, rles.cuda(), rles_length
 
         max_inputs_length = inputs_length.max().item()
         max_targets_length = targets_length.max().item()
@@ -187,9 +187,9 @@ def test(epoch, config, model, test_data, logger, visualizer=None):
         test_data):
 
         if config.training.num_gpu > 0:
-            inputs, inputs_length = inputs.cuda(), inputs_length.cuda()
-            targets, targets_length = targets.cuda(), targets_length.cuda()
-            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length.cuda(), rles.cuda(), rles_length.cuda()
+            inputs, inputs_length = inputs.cuda(), inputs_length
+            targets, targets_length = targets.cuda(), targets_length
+            rle_bases, rle_bases_length, rles, rles_length = rle_bases.cuda(), rle_bases_length, rles.cuda(), rles_length
 
         max_inputs_length = inputs_length.max().item()
         max_targets_length = targets_length.max().item()

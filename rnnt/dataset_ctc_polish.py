@@ -223,12 +223,12 @@ def Cust(prod_queue,cust_queue):
                 split_size = math.ceil(array_shape[0] / 100)
                 for i in range(split_size):
                     if i != split_size - 1:
-                        sarray = array[i * 100:(i + 1) * 100]
+                        sarray = array[i * 100:(i + 1) * 100]   # [100,7]
                         if sarray.shape[0] > feat_max_length:
-                            feat_max_length = sarray.shape[0]
+                            feat_max_length = sarray.shape[0]   #   100
                         split_array_list.append(sarray)
                     else:
-                        sarray = array[i * 100:array_shape[0]]
+                        sarray = array[i * 100:array_shape[0]]  # [n,7]
                         if sarray.shape[0] > feat_max_length:
                             feat_max_length = sarray.shape[0]
                         split_array_list.append(sarray)
@@ -297,6 +297,66 @@ class PolishGenerateDataset(Data.Dataset):
     def __len__(self):
         return self.lengths
 
+class PolishPredictDataset(Data.Dataset):
+    def __init__(self, datafile):
+        super(PolishPredictDataset, self).__init__()
+        self.train_data_file = datafile
+        # self.regions, self.train_feats, self.feat_max_length = load_feature_data(datafile)
+        fopen = open(datafile,'r')
+        length = 0
+        for line in fopen:
+            if line.startswith(">"):
+                length += 1
+        self.lengths = math.ceil(length/1000)
+        fopen.close()
+        self.fopen = open(datafile,'r')
+    
+    def __getitem__(self, index):
+        regions, feats = [],[]
+        feat_max_length = 0
+        for i in range(1000):
+            header = self.fopen.readline()
+            if not header:
+                break
+            feat = self.fopen.readline()
+            if not feat:
+                break
+            header = header.rstrip().replace('>', '')
+            refName, startPos, endPos = header.split('\t')
+            array = np.array([float(v) for v in feat.split(',')[:-1]]).reshape((-1, 7)) # [L,7]
+            array_shape = array.shape   # [L,7]
+            if array_shape[0] > 100:
+                split_array_list = []
+                split_region_list = []
+                split_size = math.ceil(array_shape[0] / 100)
+                for i in range(split_size):
+                    if i != split_size - 1:
+                        sarray = array[i * 100:(i + 1) * 100]
+                        if sarray.shape[0] > feat_max_length:
+                            feat_max_length = sarray.shape[0]
+                        split_array_list.append(sarray)
+                    else:
+                        sarray = array[i * 100:array_shape[0]]
+                        if sarray.shape[0] > feat_max_length:
+                            feat_max_length = sarray.shape[0]
+                        split_array_list.append(sarray)
+                    split_region_list.append(refName + '\t' + startPos + '\t' + endPos + "\t" + str(i))
+                feats.extend(split_array_list)
+                regions.extend(split_region_list)
+            else:
+                if array_shape[0] > feat_max_length:
+                    feat_max_length = array_shape[0]
+                feats.append(array)
+                regions.append(refName + '\t' + startPos + '\t' + endPos + "\t" + str(0))
+        feature_lengths = np.array([v.shape[0] for v in feats]).astype(np.int)
+        feature = np.array([pad(v, feat_max_length).astype(np.float32) for v in feats])
+        return regions, feature, feature_lengths
+    
+    def __len__(self):
+        return self.lengths
+
+        
+
 # if __name__ == '__main__':
 #     configfile = open("../config/aishell.yaml")
 #
@@ -312,12 +372,30 @@ class PolishGenerateDataset(Data.Dataset):
 #         pack = pack_padded_sequence(feats, inputs_length, batch_first=True, enforce_sorted=False)  # [N, L, C]
 
 if __name__=='__main__':
-    generate_dataset = PolishGenerateDataset("/home/user/experiment/BlockPolish/computing_time/BlockPolish/racon/chr22-complex_features.txt",512,40)
-    generateg_data = torch.utils.data.DataLoader(generate_dataset, batch_size=1, shuffle=False, num_workers=4)
+    # generate_dataset = PolishGenerateDataset("/home/user/experiment/BlockPolish/computing_time/BlockPolish/racon/chr22-complex_features.txt",512,40)
+    # generateg_data = torch.utils.data.DataLoader(generate_dataset, batch_size=1, shuffle=False, num_workers=4)
+    # for setp, (regions, feats, inputs_length) in enumerate(generateg_data):
+    #     print(feats.shape,inputs_length.shape)
+    #     # print(inputs_length[0])
+    #     print(regions)
+    #     feats = torch.FloatTensor(feats)
+    #     inputs_length = torch.LongTensor(inputs_length)
+    #     print(feats.size())
+
+    generate_dataset = PolishPredictDataset("~/projects/BlockPolish/hg002/trivial.txt")
+    generateg_data = torch.utils.data.DataLoader(generate_dataset, batch_size=1, shuffle=False, num_workers=0)
+    max_len = 0
     for setp, (regions, feats, inputs_length) in enumerate(generateg_data):
-        print(feats.shape,inputs_length.shape)
+        regions = regions
+        feats = feats[0]
+        inputs_length = inputs_length[0]
+        # print(regions,feats,inputs_length)
+        # print(feats.shape,inputs_length.shape)
         # print(inputs_length[0])
-        print(regions)
+        # print(regions)
         feats = torch.FloatTensor(feats)
         inputs_length = torch.LongTensor(inputs_length)
-        print(feats.size())
+        if len(regions) > max_len:
+            max_len = len(regions)
+        print(len(regions),'\t', feats.size(), '\t', inputs_length.size())
+    print(max_len)
